@@ -35,7 +35,7 @@
  * @param {function} classFunction
  * @returns {function}
  */
-function createObject (classFunction) {
+function createObject(classFunction) {
     var tempClass = function (parameters) {
         classFunction.apply(this, parameters);
     };
@@ -144,7 +144,7 @@ Container.prototype.get = function (name, parameters, callback) {
 
 /**
  * Removes link between Container and given name.
- * 
+ *
  * @param {string} name
  * @returns {void}
  */
