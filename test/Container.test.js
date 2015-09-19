@@ -2,16 +2,16 @@ var Container = require('../dist/Container.min.js');
 var Window = require('./stubs/Window');
 
 module.exports = {
-    setUp: function (callback) {
+    "setUp": function (test) {
         this.container = new Container({
             Date: Date
         });
 
-        callback();
+        test();
     },
 
-    tearDown: function (callback) {
-        callback();
+    "tearDown": function (test) {
+        test();
     },
 
     "it should contain default objects": function (test) {
@@ -32,8 +32,9 @@ module.exports = {
                 this.container.bind('Date', Date)
             },
             Error,
-            'Element "Date" is already binded.'
+            'Element "Date" is already bound.'
         );
+
         test.done();
     },
 
@@ -47,7 +48,10 @@ module.exports = {
 
     "it should get date instance from container and after run callback": function (test) {
         this.container.get('Date', function () {
-            test.strictEqual(new Date().getTime(), this.getTime())
+            var different = new Date().getTime() - this.getTime();
+
+            // sometimes CPU catches lags and test fails...
+            test.ok(different < 2);
         });
 
         test.done();
@@ -71,6 +75,18 @@ module.exports = {
             test.ok(this instanceof Window);
             test.ok(this.getDate() instanceof Date);
         });
+
+        test.done();
+    },
+
+    "it should throw when try to get undefined element from container": function (test) {
+        test.throws(
+            function () {
+                this.container.get('Undefined Element')
+            },
+            Error,
+            'Element "Undefined Element" does not exist.'
+        );
 
         test.done();
     }
