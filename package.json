@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "description": "Simply Container for using Dependency Injection pattern in JavaScript files.",
   "keywords": "di, ioc, container, dependency, injection, inversion of control",
-  "homepage": "https://pomek.github.com/container.js",
+  "homepage": "hhttps://github.com/pomek/container.js",
   "bugs": {
-    "url": "https://github.com/pomek/container.js",
+    "url": "https://github.com/pomek/container.js/issues",
     "email": "github@pomek.pl"
   },
   "license": "BSD-3-Clause",
