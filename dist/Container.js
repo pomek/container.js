@@ -45,7 +45,11 @@ function createObject (classFunction) {
 }
 
 /**
- * @param {Object.<string, function>} map
+ * Constructor of Container object. The `map` parameter allows to create default
+ * bindings for existing class, ie. {Date: Date}. When Container.get() is calling with
+ * "Date" parameter, engine knows that name and will return concrete instance of Date.
+ *
+ * @param {Object.<string, function>} map [map={}]
  * @constructor
  */
 var Container = function (map) {
@@ -57,6 +61,12 @@ var Container = function (map) {
     }.bind(this));
 };
 
+/**
+ * Return true if Container contains element with given name.
+ *
+ * @param {string} name
+ * @returns {boolean}
+ */
 Container.prototype.has = function (name) {
     return !!this.map[name];
 };
@@ -66,8 +76,13 @@ Container.prototype.has = function (name) {
  *
  * @param {string} name
  * @param {function} instance
+ * @returns {void}
  */
 Container.prototype.bind = function (name, instance) {
+    if ("function" !== typeof instance) {
+        throw new TypeError('Given `instance` argument does not seem like Class definition.');
+    }
+
     if (true === this.has(name)) {
         throw new Error('Element "' + name + '" is already bound.');
     }
@@ -76,6 +91,7 @@ Container.prototype.bind = function (name, instance) {
 };
 
 Container.prototype.singleton = function (name, instance) {
+    // todo: implementation
 };
 
 /**
@@ -126,7 +142,14 @@ Container.prototype.get = function (name, parameters, callback) {
     return classInstance;
 };
 
+/**
+ * Removes link between Container and given name.
+ * 
+ * @param {string} name
+ * @returns {void}
+ */
 Container.prototype.remove = function (name) {
+    delete this.map[name];
 };
 
 return Container;

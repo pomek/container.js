@@ -26,7 +26,19 @@ module.exports = {
         test.done();
     },
 
-    "it should throw error when try to bind already exist element": function (test) {
+    "it should throw error when try to bind element with invalid definition of class": function (test) {
+        test.throws(
+            function () {
+                this.container.bind('Window', new Window);
+            },
+            TypeError,
+            'Given `instance` argument does not seem like Class definition.'
+        );
+
+        test.done();
+    },
+
+    "it should throw error error when try to bind already exist element": function (test) {
         test.throws(
             function () {
                 this.container.bind('Date', Date)
@@ -79,7 +91,7 @@ module.exports = {
         test.done();
     },
 
-    "it should throw when try to get undefined element from container": function (test) {
+    "it should throw error when try to get undefined element from container": function (test) {
         test.throws(
             function () {
                 this.container.get('Undefined Element')
@@ -87,6 +99,14 @@ module.exports = {
             Error,
             'Element "Undefined Element" does not exist.'
         );
+
+        test.done();
+    },
+
+    "it should remove existing element from container": function (test) {
+        this.container.remove('Date');
+
+        test.strictEqual(this.container.has('Date'), false);
 
         test.done();
     }
