@@ -1,0 +1,21 @@
+{
+  "name": "Container.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/pomek/container.js",
+  "authors": [
+    "Kamil Piechaczek <github@pomek.pl>"
+  ],
+  "description": "Simply Container for using Dependency Injection pattern in JavaScript",
+  "main": "dist/Container.min.js",
+  "keywords": [
+    "di",
+    "ioc",
+    "container",
+    "dependency",
+    "injection",
+    "inversion",
+    "of",
+    "control"
+  ],
+  "license": "MIT"
+}

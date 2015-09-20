@@ -8,7 +8,8 @@
     "url": "https://github.com/pomek/container.js/issues",
     "email": "github@pomek.pl"
   },
-  "license": "BSD-3-Clause",
+  "license": "MIT",
+  "main": "dist/Container.min.js",
   "author": {
     "name": "Kamil Piechaczek",
     "email": "github@pomek.pl",
