@@ -74,10 +74,10 @@ var Container = function (elements) {
 
 /**
  * Version of Container.
- * 
+ *
  * @type {string}
  */
-Container.version = "1.0.0";
+Container.version = "1.0.1";
 
 /**
  * Return true if Container contains element with given name.
