@@ -1,5 +1,6 @@
 var Container = require('../dist/Container.min.js');
 var Window = require('./stubs/Window');
+var Home = require('./stubs/Home');
 
 module.exports = {
     "setUp": function (test) {
@@ -20,7 +21,22 @@ module.exports = {
     },
 
     "it should add new item into container": function (test) {
-        this.container.bind('Window', Window);
+        this.container.bind('Window', Window, ['Date']);
+
+        test.ok(this.container.has('Window'));
+
+        test.done();
+    },
+
+    "it should add new item into container with function argument": function (test) {
+        var windowArguments = [
+            function () {
+                return new Date();
+            }
+        ];
+
+        this.container.bind('Window', Window, windowArguments);
+
         test.ok(this.container.has('Window'));
 
         test.done();
@@ -50,15 +66,32 @@ module.exports = {
         test.done();
     },
 
-    "it should get instance from container without any more parameters": function (test) {
-        this.container.bind('Window', Window);
-        test.ok(this.container.get('Window') instanceof Window);
+    "it should get instance from container": function (test) {
+        this.container.bind('Window', Window, ['Date']);
+
         test.ok(this.container.get('Date') instanceof Date);
+        test.ok(this.container.get('Window') instanceof Window);
 
         test.done();
     },
 
-    "it should get date instance from container and after run callback": function (test) {
+    "it should get instance from container with custom argument": function (test) {
+        var windowArguments = [
+            function () {
+                return 'Date';
+            }
+        ];
+
+        this.container.bind('Window', Window, windowArguments);
+        var windowElement = this.container.get('Window');
+
+        test.ok(windowElement instanceof Window);
+        test.strictEqual(windowElement.getDate(), 'Date');
+
+        test.done();
+    },
+
+    "it should get date instance from container and run callback": function (test) {
         this.container.get('Date', function () {
             var different = new Date().getTime() - this.getTime();
 
@@ -70,9 +103,9 @@ module.exports = {
     },
 
     "it should get Window instance from container with Date parameter": function (test) {
-        this.container.bind('Window', Window);
+        this.container.bind('Window', Window, ['Date']);
 
-        var window_container = this.container.get('Window', ['Date']);
+        var window_container = this.container.get('Window');
 
         test.ok(window_container instanceof Window);
         test.ok(window_container.getDate() instanceof Date);
@@ -80,12 +113,40 @@ module.exports = {
         test.done();
     },
 
-    "it should get Window instance from container with Date parameter and after run callback": function (test) {
-        this.container.bind('Window', Window);
+    "it should get Window instance from container with Date parameter and run callback": function (test) {
+        this.container.bind('Window', Window, ['Date']);
 
-        this.container.get('Window', ['Date'], function () {
+        this.container.get('Window', function () {
             test.ok(this instanceof Window);
             test.ok(this.getDate() instanceof Date);
+        });
+
+        test.done();
+    },
+
+    "it should get Home instance from container (test nesting)": function (test) {
+        this.container.bind('Window', Window, ['Date']);
+        this.container.bind('Home', Home, ['Window']);
+
+        var homeElement = this.container.get('Home');
+
+        test.ok(homeElement instanceof Home);
+        test.ok(homeElement.getWindow() instanceof Window);
+        test.ok(homeElement.getWindow().getDate() instanceof Date);
+
+        test.done();
+    },
+
+    "it should get Home instance from container and run callback (test nesting)": function (test) {
+        this.container.bind('Window', Window, ['Date']);
+        this.container.bind('Home', Home, ['Window']);
+
+        this.container.get('Home', function () {
+            var windowElement = this.getWindow(),
+                different = new Date().getTime() - windowElement.getDate().getTime();
+
+            // sometimes CPU catches lags and test fails...
+            test.ok(different < 2);
         });
 
         test.done();

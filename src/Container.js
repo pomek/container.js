@@ -56,13 +56,18 @@ Container.prototype.has = function (name) {
 };
 
 /**
- * Method binds given instance with given key name.
+ * Method binds given instance with given key name. Each value in `parameters` array
+ * should be name of element in Container or function if want get custom value.
+ *
+ * Instead of key name you can also pass function. Result of the function will be use
+ * as an argument.
  *
  * @param {string} name
  * @param {function} instance
+ * @param {string[]} parameters [parameters=[]]
  * @returns {void}
  */
-Container.prototype.bind = function (name, instance) {
+Container.prototype.bind = function (name, instance, parameters) {
     if ("function" !== typeof instance) {
         throw new TypeError('Given `instance` argument does not seem like Class definition.');
     }
@@ -71,7 +76,14 @@ Container.prototype.bind = function (name, instance) {
         throw new Error('Element "' + name + '" is already bound.');
     }
 
-    this.map[name] = instance;
+    if (false === Array.isArray(parameters)) {
+        parameters = [];
+    }
+
+    this.map[name] = {
+        instance: instance,
+        parameters: parameters
+    };
 };
 
 Container.prototype.singleton = function (name, instance) {
@@ -79,20 +91,17 @@ Container.prototype.singleton = function (name, instance) {
 };
 
 /**
- * It returns instance of earlier bound instance. Parameter `parameters` can be
- * an array of strings with name of elements. Given elements will return Container.
+ * It returns instance of earlier bound instance. Parameter `callback` the function
+ * will be called when container finds given element. Scope of callback function
+ * will be earlier created instance.
  *
- * The `parameters` can also be a function. The function will be called when container
- * finds given element. New created instance will be scope (this) for callback function.
- *
- * Both parameters (`parameters` and `callback`) are optional.
+ * Parameter `callback` is optional.
  *
  * @param {string} name
- * @param {string[]|function} parameters [parameters=undefined]
  * @param {function} callback [callback=undefined]
  * @returns {*}
  */
-Container.prototype.get = function (name, parameters, callback) {
+Container.prototype.get = function (name, callback) {
     // Throws error when given element doesn't exist
     if (false === this.has(name)) {
         throw new Error('Element "' + name + '" does not exist.');
@@ -101,23 +110,25 @@ Container.prototype.get = function (name, parameters, callback) {
     var className = this.map[name];
 
     // Return instance of given element
-    if ("undefined" === typeof parameters) {
-        return new className();
+    if ("undefined" === typeof callback && 0 === className.parameters.length) {
+        return new className.instance();
     }
 
-    // This in callback function will be instance of "name" from container.
-    if ("function" === typeof parameters) {
-        return parameters.call(new className());
+    // this in callback function will be instance of "name" class from container
+    if ("function" === typeof callback && 0 === className.parameters.length) {
+        return callback.call(new className.instance());
     }
 
     var classInstanceParameters = [];
 
     // Build parameters
-    parameters.forEach(function (param) {
-        classInstanceParameters.push(this.get(param));
+    className.parameters.forEach(function (item) {
+        var value = ("function" === typeof item) ? item() : this.get(item);
+
+        classInstanceParameters.push(value);
     }.bind(this));
 
-    var classInstance = new (createObject(className))(classInstanceParameters);
+    var classInstance = new (createObject(className.instance))(classInstanceParameters);
 
     if ("function" === typeof callback) {
         return callback.call(classInstance);
