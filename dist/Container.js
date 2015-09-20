@@ -45,8 +45,27 @@ function createObject(classFunction) {
 }
 
 /**
+ * Builds instances based on given string parameters.
+ *
+ * @this {Container}
+ * @param {string[]|function[]} parameters
+ * @returns {string[]|function[]}
+ */
+function buildParameters(parameters) {
+    var classInstanceParameters = [];
+
+    parameters.forEach(function (item) {
+        var value = ("function" === typeof item) ? item() : this.get(item);
+
+        classInstanceParameters.push(value);
+    }.bind(this));
+
+    return classInstanceParameters;
+}
+
+/**
  * Constructor of Container object. The `map` parameter allows to create default
- * bindings for existing class, ie. {Date: Date}. When Container.get() is calling with
+ * bindings for existing classes, ie. {Date: Date}. When Container.get() is calling with
  * "Date" parameter, engine knows that name and will return concrete instance of Date.
  *
  * @param {Object.<string, function>} map [map={}]
@@ -72,20 +91,17 @@ Container.prototype.has = function (name) {
 };
 
 /**
- * Method binds given instance with given key name. Each value in `parameters` array
- * should be name of element in Container or function if want get custom value.
- *
- * Instead of key name you can also pass function. Result of the function will be use
- * as an argument.
+ * Method binds given instance with given name. Each value in `parameters` array
+ * should be name of element in Container or function which return value of parameter.
  *
  * @param {string} name
  * @param {function} instance
- * @param {string[]} parameters [parameters=[]]
+ * @param {string[]|function[]} parameters [parameters=[]]
  * @returns {void}
  */
 Container.prototype.bind = function (name, instance, parameters) {
     if ("function" !== typeof instance) {
-        throw new TypeError('Given `instance` argument does not seem like Class definition.');
+        throw new TypeError('Given `instance` does not seem like Class definition.');
     }
 
     if (true === this.has(name)) {
@@ -98,12 +114,32 @@ Container.prototype.bind = function (name, instance, parameters) {
 
     this.map[name] = {
         instance: instance,
-        parameters: parameters
+        parameters: parameters,
+        isSingleton: false
     };
 };
 
-Container.prototype.singleton = function (name, instance) {
-    // todo: implementation
+/**
+ *
+ * @param {string} name
+ * @param {function} concrete
+ * @param {string[]} parameters [parameters=[]]
+ * @returns {void}
+ */
+Container.prototype.singleton = function (name, concrete) {
+    if ("object" !== typeof concrete) {
+        throw new TypeError('Given `instance` does not seem like class instance.');
+    }
+
+    if (true === this.has(name)) {
+        throw new Error('Element "' + name + '" is already bound.');
+    }
+
+    this.map[name] = {
+        instance: concrete,
+        parameters: [],
+        isSingleton: true
+    };
 };
 
 /**
@@ -125,32 +161,24 @@ Container.prototype.get = function (name, callback) {
 
     var className = this.map[name];
 
+    if (true === className.isSingleton) {
+        return ("function" === typeof callback) ? callback.call(className.instance) : className.instance;
+    }
+
     // Return instance of given element
     if ("undefined" === typeof callback && 0 === className.parameters.length) {
         return new className.instance();
     }
 
-    // this in callback function will be instance of "name" class from container
+    // Scope in callback function is instance of class from Container
     if ("function" === typeof callback && 0 === className.parameters.length) {
         return callback.call(new className.instance());
     }
 
-    var classInstanceParameters = [];
+    var classInstanceParameters = buildParameters.call(this, className.parameters),
+        classInstance = new (createObject(className.instance))(classInstanceParameters);
 
-    // Build parameters
-    className.parameters.forEach(function (item) {
-        var value = ("function" === typeof item) ? item() : this.get(item);
-
-        classInstanceParameters.push(value);
-    }.bind(this));
-
-    var classInstance = new (createObject(className.instance))(classInstanceParameters);
-
-    if ("function" === typeof callback) {
-        return callback.call(classInstance);
-    }
-
-    return classInstance;
+    return ("function" === typeof callback) ? callback.call(classInstance) : classInstance;
 };
 
 /**

@@ -48,7 +48,7 @@ module.exports = {
                 this.container.bind('Window', new Window);
             },
             TypeError,
-            'Given `instance` argument does not seem like Class definition.'
+            'Given `instance` does not seem like Class definition.'
         );
 
         test.done();
@@ -170,5 +170,21 @@ module.exports = {
         test.strictEqual(this.container.has('Date'), false);
 
         test.done();
+    },
+
+    "it should bind singleton based on instance of class": function (test) {
+        this.container.remove('Date');
+        this.container.singleton('Date', new Date());
+
+        this.container.get('Date', function () {
+            this.setFullYear(2014);
+        });
+
+        setTimeout(function () {
+            var date = this.container.get('Date');
+
+            test.strictEqual(date.getFullYear(), 2014);
+            test.done();
+        }.bind(this), 1000);
     }
 };
