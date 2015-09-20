@@ -45,7 +45,11 @@ function buildParameters(parameters) {
  */
 var Container = function (elements) {
     elements = elements || {};
-    this.elements = {};
+
+    Object.defineProperty(this, 'elements', {
+        value: {},
+        writable: false
+    });
 
     Object.keys(elements).forEach(function (className) {
         this.bind(className, elements[className]);
@@ -59,7 +63,7 @@ var Container = function (elements) {
  * @returns {boolean}
  */
 Container.prototype.has = function (name) {
-    return !!this.elements[name];
+    return this.elements.hasOwnProperty(name);
 };
 
 /**

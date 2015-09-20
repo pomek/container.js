@@ -17,34 +17,6 @@
 "use strict";
 
 /**
- * It allows "hide" body of given function. When you try to see body of function,
- * console returns something like "function bound () { [native code] }".
- *
- * @see http://tutorials.comandeer.pl/js-hiding.html
- * @param {function} body
- * @returns function
- */
-var obfuscate = (function () {
-    var a = Function.prototype;
-
-    try {
-        a.call.apply(a.bind, [
-            function () {
-            }
-        ])();
-    }
-    catch (e) {
-        return function (f) {
-            return f;
-        };
-    }
-
-    return function (f) {
-        return a.call.apply(this, [f]);
-    };
-}());
-
-/**
  * It creates instance of given object with dynamic list of parameters.
  *
  * @see http://stackoverflow.com/a/16324447
@@ -89,7 +61,11 @@ function buildParameters(parameters) {
  */
 var Container = function (elements) {
     elements = elements || {};
-    this.elements = {};
+
+    Object.defineProperty(this, 'elements', {
+        value: {},
+        writable: false
+    });
 
     Object.keys(elements).forEach(function (className) {
         this.bind(className, elements[className]);
@@ -102,9 +78,9 @@ var Container = function (elements) {
  * @param {string} name
  * @returns {boolean}
  */
-Container.prototype.has = obfuscate(function (name) {
-    return !!this.elements[name];
-}).bind(this);
+Container.prototype.has = function (name) {
+    return this.elements.hasOwnProperty(name);
+};
 
 /**
  * Binds given instance with given name. Each value in `parameters` array
@@ -159,11 +135,8 @@ Container.prototype.singleton = function (name, concrete) {
 };
 
 /**
- * It returns instance of earlier bound instance. Parameter `callback` the function
- * will be called when container finds given element. Scope of callback function
- * will be earlier created instance.
- *
- * Parameter `callback` is optional.
+ * It returns instance of earlier bound instance. Callback function will be called when
+ * container finds given element. Scope of callback function will be earlier created instance.
  *
  * @param {string} name
  * @param {function} callback [callback=undefined]
