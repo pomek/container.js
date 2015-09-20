@@ -1,5 +1,5 @@
 {
-  "name": "container.js",
+  "name": "node-container.js",
   "version": "1.0.0",
   "description": "Simply Container for using Dependency Injection pattern in JavaScript",
   "keywords": "di, ioc, container, dependency, injection, inversion of control",
