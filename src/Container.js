@@ -1,18 +1,6 @@
 "use strict";
 
 /**
- * It allows "hide" body of given function. When you try to see body of function,
- * console returns something like "function bound () { [native code] }".
- *
- * @see http://tutorials.comandeer.pl/js-hiding.html
- * @param {function} body
- * @returns function
- */
-//function hideFn (body) {
-//    return Function.prototype.call.call(Function.prototype.bind, body);
-//}
-
-/**
  * It creates instance of given object with dynamic list of parameters.
  *
  * @see http://stackoverflow.com/a/16324447
@@ -48,19 +36,19 @@ function buildParameters(parameters) {
 }
 
 /**
- * Constructor of Container object. The `map` parameter allows to create default
+ * Constructor of Container object. The `elements` parameter allows to create default
  * bindings for existing classes, ie. {Date: Date}. When Container.get() is calling with
  * "Date" parameter, engine knows that name and will return concrete instance of Date.
  *
- * @param {Object.<string, function>} map [map={}]
+ * @param {Object.<string, function>} elements [elements={}]
  * @constructor
  */
-var Container = function (map) {
-    map = map || {};
-    this.map = {};
+var Container = function (elements) {
+    elements = elements || {};
+    this.elements = {};
 
-    Object.keys(map).forEach(function (className) {
-        this.bind(className, map[className]);
+    Object.keys(elements).forEach(function (className) {
+        this.bind(className, elements[className]);
     }.bind(this));
 };
 
@@ -71,7 +59,7 @@ var Container = function (map) {
  * @returns {boolean}
  */
 Container.prototype.has = function (name) {
-    return !!this.map[name];
+    return !!this.elements[name];
 };
 
 /**
@@ -96,7 +84,7 @@ Container.prototype.bind = function (name, instance, parameters) {
         parameters = [];
     }
 
-    this.map[name] = {
+    this.elements[name] = {
         instance: instance,
         parameters: parameters,
         isSingleton: false
@@ -119,7 +107,7 @@ Container.prototype.singleton = function (name, concrete) {
         throw new Error('Element "' + name + '" is already bound.');
     }
 
-    this.map[name] = {
+    this.elements[name] = {
         instance: concrete,
         parameters: [],
         isSingleton: true
@@ -127,11 +115,8 @@ Container.prototype.singleton = function (name, concrete) {
 };
 
 /**
- * It returns instance of earlier bound instance. Parameter `callback` the function
- * will be called when container finds given element. Scope of callback function
- * will be earlier created instance.
- *
- * Parameter `callback` is optional.
+ * It returns instance of earlier bound instance. Callback function will be called when
+ * container finds given element. Scope of callback function will be earlier created instance.
  *
  * @param {string} name
  * @param {function} callback [callback=undefined]
@@ -143,22 +128,23 @@ Container.prototype.get = function (name, callback) {
         throw new Error('Element "' + name + '" does not exist.');
     }
 
-    var className = this.map[name];
+    var className = this.elements[name],
+        hasCallback = ("function" === typeof callback);
 
     if (true === className.isSingleton) {
-        return ("function" === typeof callback) ? callback.call(className.instance) : className.instance;
+        return hasCallback ? callback.call(className.instance) : className.instance;
     }
 
     if (0 === className.parameters.length) {
         var concreteInstance = new className.instance();
 
-        return ("function" === typeof callback) ? callback.call(concreteInstance) : concreteInstance;
+        return hasCallback ? callback.call(concreteInstance) : concreteInstance;
     }
 
     var classInstanceParameters = buildParameters.call(this, className.parameters),
         classInstance = new (createObject(className.instance))(classInstanceParameters);
 
-    return ("function" === typeof callback) ? callback.call(classInstance) : classInstance;
+    return hasCallback ? callback.call(classInstance) : classInstance;
 };
 
 /**
@@ -168,5 +154,5 @@ Container.prototype.get = function (name, callback) {
  * @returns {void}
  */
 Container.prototype.remove = function (name) {
-    delete this.map[name];
+    delete this.elements[name];
 };

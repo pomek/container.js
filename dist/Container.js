@@ -24,9 +24,25 @@
  * @param {function} body
  * @returns function
  */
-//function hideFn (body) {
-//    return Function.prototype.call.call(Function.prototype.bind, body);
-//}
+var obfuscate = (function () {
+    var a = Function.prototype;
+
+    try {
+        a.call.apply(a.bind, [
+            function () {
+            }
+        ])();
+    }
+    catch (e) {
+        return function (f) {
+            return f;
+        };
+    }
+
+    return function (f) {
+        return a.call.apply(this, [f]);
+    };
+}());
 
 /**
  * It creates instance of given object with dynamic list of parameters.
@@ -64,19 +80,19 @@ function buildParameters(parameters) {
 }
 
 /**
- * Constructor of Container object. The `map` parameter allows to create default
+ * Constructor of Container object. The `elements` parameter allows to create default
  * bindings for existing classes, ie. {Date: Date}. When Container.get() is calling with
  * "Date" parameter, engine knows that name and will return concrete instance of Date.
  *
- * @param {Object.<string, function>} map [map={}]
+ * @param {Object.<string, function>} elements [elements={}]
  * @constructor
  */
-var Container = function (map) {
-    map = map || {};
-    this.map = {};
+var Container = function (elements) {
+    elements = elements || {};
+    this.elements = {};
 
-    Object.keys(map).forEach(function (className) {
-        this.bind(className, map[className]);
+    Object.keys(elements).forEach(function (className) {
+        this.bind(className, elements[className]);
     }.bind(this));
 };
 
@@ -86,9 +102,9 @@ var Container = function (map) {
  * @param {string} name
  * @returns {boolean}
  */
-Container.prototype.has = function (name) {
-    return !!this.map[name];
-};
+Container.prototype.has = obfuscate(function (name) {
+    return !!this.elements[name];
+}).bind(this);
 
 /**
  * Binds given instance with given name. Each value in `parameters` array
@@ -112,7 +128,7 @@ Container.prototype.bind = function (name, instance, parameters) {
         parameters = [];
     }
 
-    this.map[name] = {
+    this.elements[name] = {
         instance: instance,
         parameters: parameters,
         isSingleton: false
@@ -135,7 +151,7 @@ Container.prototype.singleton = function (name, concrete) {
         throw new Error('Element "' + name + '" is already bound.');
     }
 
-    this.map[name] = {
+    this.elements[name] = {
         instance: concrete,
         parameters: [],
         isSingleton: true
@@ -159,22 +175,23 @@ Container.prototype.get = function (name, callback) {
         throw new Error('Element "' + name + '" does not exist.');
     }
 
-    var className = this.map[name];
+    var className = this.elements[name],
+        hasCallback = ("function" === typeof callback);
 
     if (true === className.isSingleton) {
-        return ("function" === typeof callback) ? callback.call(className.instance) : className.instance;
+        return hasCallback ? callback.call(className.instance) : className.instance;
     }
 
     if (0 === className.parameters.length) {
         var concreteInstance = new className.instance();
 
-        return ("function" === typeof callback) ? callback.call(concreteInstance) : concreteInstance;
+        return hasCallback ? callback.call(concreteInstance) : concreteInstance;
     }
 
     var classInstanceParameters = buildParameters.call(this, className.parameters),
         classInstance = new (createObject(className.instance))(classInstanceParameters);
 
-    return ("function" === typeof callback) ? callback.call(classInstance) : classInstance;
+    return hasCallback ? callback.call(classInstance) : classInstance;
 };
 
 /**
@@ -184,7 +201,7 @@ Container.prototype.get = function (name, callback) {
  * @returns {void}
  */
 Container.prototype.remove = function (name) {
-    delete this.map[name];
+    delete this.elements[name];
 };
 
 return Container;
