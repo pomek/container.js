@@ -73,6 +73,13 @@ var Container = function (elements) {
 };
 
 /**
+ * Version of Container.
+ * 
+ * @type {string}
+ */
+Container.version = "1.0.0";
+
+/**
  * Return true if Container contains element with given name.
  *
  * @param {string} name
