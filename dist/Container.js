@@ -91,7 +91,7 @@ Container.prototype.has = function (name) {
 };
 
 /**
- * Method binds given instance with given name. Each value in `parameters` array
+ * Binds given instance with given name. Each value in `parameters` array
  * should be name of element in Container or function which return value of parameter.
  *
  * @param {string} name
@@ -120,10 +120,10 @@ Container.prototype.bind = function (name, instance, parameters) {
 };
 
 /**
+ * Binds given object as singleton in container.
  *
  * @param {string} name
  * @param {function} concrete
- * @param {string[]} parameters [parameters=[]]
  * @returns {void}
  */
 Container.prototype.singleton = function (name, concrete) {
@@ -165,14 +165,10 @@ Container.prototype.get = function (name, callback) {
         return ("function" === typeof callback) ? callback.call(className.instance) : className.instance;
     }
 
-    // Return instance of given element
-    if ("undefined" === typeof callback && 0 === className.parameters.length) {
-        return new className.instance();
-    }
+    if (0 === className.parameters.length) {
+        var concreteInstance = new className.instance();
 
-    // Scope in callback function is instance of class from Container
-    if ("function" === typeof callback && 0 === className.parameters.length) {
-        return callback.call(new className.instance());
+        return ("function" === typeof callback) ? callback.call(concreteInstance) : concreteInstance;
     }
 
     var classInstanceParameters = buildParameters.call(this, className.parameters),

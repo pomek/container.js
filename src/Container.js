@@ -149,14 +149,10 @@ Container.prototype.get = function (name, callback) {
         return ("function" === typeof callback) ? callback.call(className.instance) : className.instance;
     }
 
-    // Return instance of given element
-    if ("undefined" === typeof callback && 0 === className.parameters.length) {
-        return new className.instance();
-    }
+    if (0 === className.parameters.length) {
+        var concreteInstance = new className.instance();
 
-    // Scope in callback function is instance of class from Container
-    if ("function" === typeof callback && 0 === className.parameters.length) {
-        return callback.call(new className.instance());
+        return ("function" === typeof callback) ? callback.call(concreteInstance) : concreteInstance;
     }
 
     var classInstanceParameters = buildParameters.call(this, className.parameters),
