@@ -16,7 +16,8 @@
     "url": "https://pomek.pl"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "grunt": "grunt"
   },
   "repository": "https://github.com/pomek/container.js",
   "devDependencies": {
