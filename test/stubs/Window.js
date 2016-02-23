@@ -1,9 +1,13 @@
-var Window = function (date) {
-    this.date = date;
-};
+(function (global) {
+    "use strict";
 
-Window.prototype.getDate = function () {
-    return this.date;
-};
+    module.exports = class Window {
+        constructor (date) {
+            this.date = date
+        }
 
-module.exports = Window;
+        getDate () {
+            return this.date;
+        }
+    }
+})(module);

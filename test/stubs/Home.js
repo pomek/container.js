@@ -1,9 +1,13 @@
-var Home = function (window) {
-    this.window = window;
-};
+(function (global) {
+    "use strict";
 
-Home.prototype.getWindow = function () {
-    return this.window;
-};
+    module.exports = class Home {
+        constructor (window) {
+            this.window = window
+        }
 
-module.exports = Home;
+        getWindow () {
+            return this.window;
+        }
+    }
+})(module);

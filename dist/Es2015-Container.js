@@ -1,3 +1,12 @@
+;(function(root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else if (typeof exports === 'object') {
+    module.exports = factory();
+  } else {
+    root.Container = factory();
+  }
+}(this, function() {
 "use strict";
 
 const ElementsSymbol = Symbol('Elements Collection');
@@ -129,3 +138,6 @@ class Container {
  * @static
  */
 Container.version = "2.0.0";
+
+return Container;
+}));

@@ -1,189 +1,172 @@
-(function (root, factory) {
+;(function(root, factory) {
   if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module unless amdModuleId is set
-    define([], function () {
-      return (root['Container'] = factory());
-    });
+    define([], factory);
   } else if (typeof exports === 'object') {
-    // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
-    // like Node.
     module.exports = factory();
   } else {
-    root['Container'] = factory();
+    root.Container = factory();
   }
-}(this, function () {
-
+}(this, function() {
 "use strict";
 
-/**
- * It creates instance of given object with dynamic list of parameters.
- *
- * @see http://stackoverflow.com/a/16324447
- * @param {function} classFunction
- * @returns {function}
- */
-function createObject(classFunction) {
-    var tempClass = function (parameters) {
-        classFunction.apply(this, parameters);
-    };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-    tempClass.prototype = classFunction.prototype;
-    return tempClass;
-}
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-/**
- * Builds instances based on given string parameters.
- *
- * @this {Container}
- * @param {string[]|function[]} parameters
- * @returns {string[]|function[]}
- */
-function buildParameters(parameters) {
-    var classInstanceParameters = [];
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    parameters.forEach(function (item) {
-        var value = ("function" === typeof item) ? item() : this.get(item);
+var ElementsSymbol = Symbol('Elements Collection');
 
-        classInstanceParameters.push(value);
-    }.bind(this));
+var Container = function () {
+    /**
+     * Constructor of Container object. The `elements` parameter allows to create default
+     * bindings for existing classes, ie. {Date: Date}. When Container.get() is calling with
+     * "Date" parameter, engine knows that name and will return concrete instance of Date.
+     *
+     * @param {Object.<string, function>} elements [elements={}]
+     * @constructor
+     */
 
-    return classInstanceParameters;
-}
+    function Container(elements) {
+        _classCallCheck(this, Container);
 
-/**
- * Constructor of Container object. The `elements` parameter allows to create default
- * bindings for existing classes, ie. {Date: Date}. When Container.get() is calling with
- * "Date" parameter, engine knows that name and will return concrete instance of Date.
- *
- * @param {Object.<string, function>} elements [elements={}]
- * @constructor
- */
-var Container = function (elements) {
-    elements = elements || {};
+        elements = elements || {};
 
-    Object.defineProperty(this, 'elements', {
-        value: {},
-        writable: false
-    });
+        this[ElementsSymbol] = {};
 
-    Object.keys(elements).forEach(function (className) {
-        this.bind(className, elements[className]);
-    }.bind(this));
-};
+        Object.keys(elements).forEach(function (className) {
+            this.bind(className, elements[className]);
+        }.bind(this));
+    }
+
+    /**
+     * Return true if Container contains element with given name.
+     *
+     * @param {string} name
+     * @returns {boolean}
+     */
+
+
+    _createClass(Container, [{
+        key: "has",
+        value: function has(name) {
+            return this[ElementsSymbol].hasOwnProperty(name);
+        }
+
+        /**
+         * Binds given instance with given name. Each value in `parameters` array
+         * should be name of element in Container or function which return value of parameter.
+         *
+         * @param {string} name
+         * @param {function} instance
+         * @param {string[]|function[]} parameters [parameters=[]]
+         * @returns {void}
+         */
+
+    }, {
+        key: "bind",
+        value: function bind(name, instance, parameters) {
+            if ("function" !== typeof instance) {
+                throw new TypeError('Given `instance` does not seem like Class definition.');
+            }
+
+            if (true === this.has(name)) {
+                throw new Error('Element "' + name + '" is already bound.');
+            }
+
+            if (false === Array.isArray(parameters)) {
+                parameters = [];
+            }
+
+            this[ElementsSymbol][name] = {
+                instance: instance,
+                parameters: parameters,
+                isSingleton: false
+            };
+        }
+
+        /**
+         * Binds given object as singleton in container.
+         *
+         * @param {string} name
+         * @param {function} concrete
+         * @returns {void}
+         */
+
+    }, {
+        key: "singleton",
+        value: function singleton(name, concrete) {
+            if ("object" !== (typeof concrete === "undefined" ? "undefined" : _typeof(concrete))) {
+                throw new TypeError('Given `instance` does not seem like class instance.');
+            }
+
+            if (true === this.has(name)) {
+                throw new Error('Element "' + name + '" is already bound.');
+            }
+
+            this[ElementsSymbol][name] = {
+                instance: concrete,
+                parameters: [],
+                isSingleton: true
+            };
+        }
+
+        /**
+         * It returns instance of earlier bound class.
+         *
+         * @param {string} name
+         * @returns {*}
+         */
+
+    }, {
+        key: "get",
+        value: function get(name) {
+            // Throws error when given element doesn't exist
+            if (false === this.has(name)) {
+                throw new Error('Element "' + name + '" does not exist.');
+            }
+
+            var className = this[ElementsSymbol][name];
+
+            if (true === className.isSingleton) {
+                return className.instance;
+            }
+
+            var classInstanceParameters = [];
+
+            className.parameters.forEach(function (item) {
+                var value = "function" === typeof item ? item() : this.get(item);
+                classInstanceParameters.push(value);
+            }.bind(this));
+
+            return new (Function.prototype.bind.apply(className.instance, [null].concat(classInstanceParameters)))();
+        }
+
+        /**
+         * Removes link between Container and given name.
+         *
+         * @param {string} name
+         * @returns {void}
+         */
+
+    }, {
+        key: "remove",
+        value: function remove(name) {
+            delete this[ElementsSymbol][name];
+        }
+    }]);
+
+    return Container;
+}();
 
 /**
  * Version of Container.
  *
  * @type {string}
+ * @static
  */
-Container.version = "1.0.1";
 
-/**
- * Return true if Container contains element with given name.
- *
- * @param {string} name
- * @returns {boolean}
- */
-Container.prototype.has = function (name) {
-    return this.elements.hasOwnProperty(name);
-};
 
-/**
- * Binds given instance with given name. Each value in `parameters` array
- * should be name of element in Container or function which return value of parameter.
- *
- * @param {string} name
- * @param {function} instance
- * @param {string[]|function[]} parameters [parameters=[]]
- * @returns {void}
- */
-Container.prototype.bind = function (name, instance, parameters) {
-    if ("function" !== typeof instance) {
-        throw new TypeError('Given `instance` does not seem like Class definition.');
-    }
-
-    if (true === this.has(name)) {
-        throw new Error('Element "' + name + '" is already bound.');
-    }
-
-    if (false === Array.isArray(parameters)) {
-        parameters = [];
-    }
-
-    this.elements[name] = {
-        instance: instance,
-        parameters: parameters,
-        isSingleton: false
-    };
-};
-
-/**
- * Binds given object as singleton in container.
- *
- * @param {string} name
- * @param {function} concrete
- * @returns {void}
- */
-Container.prototype.singleton = function (name, concrete) {
-    if ("object" !== typeof concrete) {
-        throw new TypeError('Given `instance` does not seem like class instance.');
-    }
-
-    if (true === this.has(name)) {
-        throw new Error('Element "' + name + '" is already bound.');
-    }
-
-    this.elements[name] = {
-        instance: concrete,
-        parameters: [],
-        isSingleton: true
-    };
-};
-
-/**
- * It returns instance of earlier bound instance. Callback function will be called when
- * container finds given element. Scope of callback function will be earlier created instance.
- *
- * @param {string} name
- * @param {function} callback [callback=undefined]
- * @returns {*}
- */
-Container.prototype.get = function (name, callback) {
-    // Throws error when given element doesn't exist
-    if (false === this.has(name)) {
-        throw new Error('Element "' + name + '" does not exist.');
-    }
-
-    var className = this.elements[name],
-        hasCallback = ("function" === typeof callback);
-
-    if (true === className.isSingleton) {
-        return hasCallback ? callback.call(className.instance) : className.instance;
-    }
-
-    if (0 === className.parameters.length) {
-        var concreteInstance = new className.instance();
-
-        return hasCallback ? callback.call(concreteInstance) : concreteInstance;
-    }
-
-    var classInstanceParameters = buildParameters.call(this, className.parameters),
-        classInstance = new (createObject(className.instance))(classInstanceParameters);
-
-    return hasCallback ? callback.call(classInstance) : classInstance;
-};
-
-/**
- * Removes link between Container and given name.
- *
- * @param {string} name
- * @returns {void}
- */
-Container.prototype.remove = function (name) {
-    delete this.elements[name];
-};
-
+Container.version = "2.0.0";
 return Container;
-
 }));

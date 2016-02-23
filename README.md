@@ -5,28 +5,40 @@
 > Simply Container for using Dependency Injection pattern in JavaScript
 
 Container.js is lightweight library (<2kb when minified), designed to facilitate how you can implement [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection) pattern in your JavaScript applications.
+It works both versions of ECMAScript - 2015 (ES6) and 5 (ES5).
 
 ## How to use
 
 In order to use this package, you need to install it in your project:
 
-**via [Bower](https://bower.io)**
+**via [Bower](https://bower.io)** (by default will be used **ES5** version)
 
 ```js
-bower install Container.js
+bower install Container.js --save
 ```
 
-**via [NPM](https://www.npmjs.com/package/node-container.js)**
+**via [NPM](https://www.npmjs.com/package/node-container.js)** (by default will be used **ES2015** version)
 
 ```js
 npm install node-container.js --save
 ```
 
-or download it manually from [here](https://github.com/pomek/container.js/blob/master/dist/Container.min.js).
+or download it manually:
+ * [**ES5** version](https://github.com/pomek/container.js/blob/master/dist/Container.min.js),
+ * [**ES2015** version](https://github.com/pomek/container.js/blob/master/dist/Es2015-Container.js).
 
 ```html
 <script src="/path/to/Container.min.js"></script>
+<script src="/path/to/Es2015-Container.js"></script>
 ```
+
+## Changes
+
+### 2.0.0
+
+* Removed callback from `Container.get` method
+* Gulp instead of Grunt
+* Support for ES2015
 
 ## API Reference
 
@@ -74,24 +86,19 @@ appContainer.bind('Door', Door, [function () { return Math.random(); }]);
 
 ```js
 appContainer.singleton('Date', new Date());
-appContainer.get('Date', function () {
-    this.setFullYear(2014);
-});
-
-console.log(appContainer.get('Date').getFullYear()); // 2014
+appContainer.get('Date').setFullYear(2014);
+appContainer.get('Date').getFullYear(); // 2014
 ```
 
 ---
 
-`mixed` `Container.prototype.get` - *arguments*: [`string name, function callback`]
-> Returns instance of earlier bound instance. Callback function will be called when container finds given element. Scope of callback function will be earlier created instance.
+`mixed` `Container.prototype.get` - *arguments*: [`string name`]
+> Returns instance of earlier bound instance.
 
 *Example:*
 
 ```js
-appContainer.get('Window', function () {
-    console.log(this instanceof Window); // true
-});
+appContainer.get('Window'); // an Window instance
 ```
 
 ---
@@ -103,7 +110,7 @@ appContainer.get('Window', function () {
 
 ```js
 appContainer.remove('Date');
-console.log(appContainer.has('Date')); // false
+appContainer.has('Date'); // false
 ```
 
 ## Development
@@ -111,19 +118,18 @@ console.log(appContainer.has('Date')); // false
 Firstly need to install dev dependencies:
 
 ```js
-npm install -g grunt grunt-cli
 npm install
 ```
 
 For running unit tests:
 
 ```js
-grunt test
+npm run gulp test
 ```
 
-For build new version dists:
+For build new dists version:
 
 ```js
-grunt build
+npm run gulp
 ```
 
