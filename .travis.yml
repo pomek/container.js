@@ -11,4 +11,4 @@ before_script:
     - npm install
 
 script:
-    - npm run grunt test
+    - npm run gulp
